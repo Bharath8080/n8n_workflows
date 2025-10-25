@@ -1,0 +1,260 @@
+{
+  "name": "My Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "new",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -464,
+        -560
+      ],
+      "id": "005b6c8c-c2cd-419b-b4eb-c3b6f3f87a5f",
+      "name": "Webhook",
+      "webhookId": "fb0688c6-9176-4542-a8bb-392b7df6b091"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        224,
+        -672
+      ],
+      "id": "00328700-b685-40d3-a90d-5814256aee37",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://mcp.tavily.com/mcp/?tavilyApiKey=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",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [
+        48,
+        48
+      ],
+      "id": "0b550776-43f2-4f67-88d6-c1c1025812d7",
+      "name": "Tavily MCP"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Answer the user queries by performing websearch via MCP servers  {{ $json.body.query }}.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -160,
+        -672
+      ],
+      "id": "d36975bc-d51f-472f-a51f-f6c745b29a8d",
+      "name": "MCP AI Agent",
+      "notesInFlow": true,
+      "notes": "Double-click to open"
+    },
+    {
+      "parameters": {
+        "text": "=Perform MCP web search and return the most accurate, current, and clear response to {{ $json.body.query }}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        -96,
+        -400
+      ],
+      "id": "ab047eb7-69b7-4915-858f-6de9960f1d89",
+      "name": "AI Agent Tool",
+      "notesInFlow": true,
+      "notes": "Perform a live web search via connected MCP servers to accurately answer the user's query: {{ $json.body.query }}. Ensure the response is well-structured, concise, and based on the most relevant and up-to-date information available online."
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.body.query }}",
+        "contextWindowLength": 7
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -96,
+        0
+      ],
+      "id": "5aa50c91-2bb6-4658-b576-a137d2cfe266",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-20b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        -336
+      ],
+      "id": "a6f78369-494e-40ef-b7de-1a40c41c383b",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "XgztavmlQM5oFagB",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-oss-120b",
+          "mode": "list",
+          "cachedResultName": "gpt-oss-120b"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -224,
+        -144
+      ],
+      "id": "62dd986f-24ea-4108-9364-d05a2dc10c81",
+      "name": "Cerebras Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "hKPEd8XG7bPyQbOG",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserItemList",
+      "typeVersion": 1,
+      "position": [
+        208,
+        -192
+      ],
+      "id": "450c1a4a-cebb-4c81-95d8-f7571cef35d8",
+      "name": "Item List Output Parser"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "MCP AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tavily MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent Tool",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent Tool",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "MCP AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cerebras Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent Tool",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Item List Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent Tool",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "versionId": "8e422846-de24-4476-b39d-514284e51172",
+  "meta": {
+    "templateId": "ready-to-run-ai-workflow-v4",
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0bf38f0fc42669a394bc65c8be01d407757be1751db724180b07ffe99403dd11"
+  },
+  "id": "ivVslY9WXWTFqM75",
+  "tags": []
+}
